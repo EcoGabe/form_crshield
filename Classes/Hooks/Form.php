@@ -85,14 +85,15 @@ class Form
         [$expirationTime, $clientData] = explode('|', $submittedResponse);
         $knownHmac = GeneralUtility::hmac($expirationTime, $this->getHmacSalt($runtime));
         $calculatedData = str_rot13($knownHmac);
+        $tsfe = $this->getTsfe($this->getRequest($runtime));
 
         if ($calculatedData !== $clientData) {
-            $this->logger->debug('CR response missmatch. Submitted data', $requestArguments);
+            $this->logger->debug('CR response missmatch. Submitted data', $requestArguments + ['EP_extra' => ['get_cache_timeout' => $tsfe->get_cache_timeout(), 'currentTimestamp' => $this->currentTimestamp, 'expirationTime' => $expirationTime, 'tsfe' => $tsfe]]);
             return '';
         }
 
         if ((int)($expirationTime) <= $this->currentTimestamp) {
-            $this->logger->debug('CR response expired. Submitted data', $requestArguments);
+            $this->logger->debug('CR response expired. Submitted data', $requestArguments + ['EP_extra' => ['get_cache_timeout' => $tsfe->get_cache_timeout(), 'currentTimestamp' => $this->currentTimestamp, 'expirationTime' => $expirationTime, 'tsfe' => $tsfe]]);
             return '';
         }
 
